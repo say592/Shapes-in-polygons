@@ -270,7 +270,7 @@
 }
 
 /* ── Responsive ───────────────────────────────────────── */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .app-body {
     flex-direction: column;
   }
@@ -280,5 +280,58 @@
     min-width: unset;
     border-right: none;
     border-bottom: 1px solid #1e293b;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  /* Horizontal row of shape buttons on mobile */
+  .shape-buttons {
+    flex-direction: row;
+  }
+
+  .shape-btn {
+    flex: 1;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.8rem;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .shape-icon {
+    font-size: 1.4rem;
+  }
+
+  /* 2-column grid on phones */
+  .results-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .results-panel {
+    padding: 1rem;
+  }
+
+  .app-header {
+    padding: 1rem 1rem 0.75rem;
+  }
+
+  .app-title {
+    font-size: 1.4rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .results-title {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .results-grid {
+    grid-template-columns: 1fr;
   }
 }
