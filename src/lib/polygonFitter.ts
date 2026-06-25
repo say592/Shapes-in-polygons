@@ -37,12 +37,27 @@ export function computeFits(shape: Shape): FitResult[] {
     const { inradius, alpha, translation } = findMinInradius(supportFn, n);
     const circumradius = inradius / Math.cos(Math.PI / n);
     const sideLength = 2 * circumradius * Math.sin(Math.PI / n);
+
+    // Overall extents: bounding box of the n vertices at this orientation.
+    // Vertex k sits at angle alpha + π/n + k·2π/n, at distance circumradius.
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (let k = 0; k < n; k++) {
+      const angle = alpha + Math.PI / n + (k * 2 * Math.PI) / n;
+      xs.push(circumradius * Math.cos(angle));
+      ys.push(circumradius * Math.sin(angle));
+    }
+    const boundingWidth = Math.max(...xs) - Math.min(...xs);
+    const boundingHeight = Math.max(...ys) - Math.min(...ys);
+
     return {
       sides: n,
       polygonName: POLYGON_NAMES[n],
       inradius,
       circumradius,
       sideLength,
+      boundingWidth,
+      boundingHeight,
       alpha,
       translation,
     } satisfies FitResult;

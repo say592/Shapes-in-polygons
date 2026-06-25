@@ -63,7 +63,8 @@ export function minInradiusForOrientation(
   const U = thetas.map((t) => [Math.cos(t), Math.sin(t)] as [number, number]);
 
   let maxObj = -Infinity;
-  let bestIndices: number[] = [];
+  // Active constraints paired with their dual weights λ_k for the best BFS found
+  let bestActive: { idx: number; lambda: number }[] = [];
 
   // Enumerate triples of active constraints
   for (let i = 0; i < n; i++) {
@@ -79,7 +80,11 @@ export function minInradiusForOrientation(
           const obj = lambda[0] * c[i] + lambda[1] * c[j] + lambda[2] * c[k];
           if (obj > maxObj) {
             maxObj = obj;
-            bestIndices = [i, j, k];
+            bestActive = [
+              { idx: i, lambda: lambda[0] },
+              { idx: j, lambda: lambda[1] },
+              { idx: k, lambda: lambda[2] },
+            ];
           }
         }
       }
@@ -94,24 +99,46 @@ export function minInradiusForOrientation(
       const obj = (c[i] + c[j]) / 2;
       if (obj > maxObj) {
         maxObj = obj;
-        bestIndices = [i, j];
+        bestActive = [
+          { idx: i, lambda: 0.5 },
+          { idx: j, lambda: 0.5 },
+        ];
       }
     }
   }
 
-  // Recover optimal translation: u_i · t* = a* - c_i for the two tightest constraints
+  // Recover optimal translation. At the optimum, u_k · t* = a* - c_k holds for every
+  // *active* constraint (λ_k > 0); constraints with λ_k = 0 are slack and must not be
+  // forced tight, or the shape is pushed off-centre. Use only the active normals: if two
+  // are linearly independent, solve the 2×2 system; otherwise (all parallel/anti-parallel)
+  // the translation is determined along that one direction and centred (min-norm) across it.
+  const active = bestActive.filter((a) => a.lambda > 1e-7);
   let tx = 0;
   let ty = 0;
-  if (bestIndices.length >= 2) {
-    const i = bestIndices[0];
-    const j = bestIndices[1];
-    const rhs0 = maxObj - c[i];
-    const rhs1 = maxObj - c[j];
-    const det = U[i][0] * U[j][1] - U[i][1] * U[j][0];
-    if (Math.abs(det) > 1e-10) {
-      tx = (rhs0 * U[j][1] - rhs1 * U[i][1]) / det;
-      ty = (U[i][0] * rhs1 - U[j][0] * rhs0) / det;
+
+  let solved = false;
+  for (let a = 0; a < active.length && !solved; a++) {
+    for (let b = a + 1; b < active.length; b++) {
+      const i = active[a].idx;
+      const j = active[b].idx;
+      const det = U[i][0] * U[j][1] - U[i][1] * U[j][0];
+      if (Math.abs(det) > 1e-10) {
+        const rhs0 = maxObj - c[i];
+        const rhs1 = maxObj - c[j];
+        tx = (rhs0 * U[j][1] - rhs1 * U[i][1]) / det;
+        ty = (U[i][0] * rhs1 - U[j][0] * rhs0) / det;
+        solved = true;
+        break;
+      }
     }
+  }
+
+  if (!solved && active.length >= 1) {
+    // Single constraint direction: place t along that normal, centred in the free axis.
+    const i = active[0].idx;
+    const comp = maxObj - c[i];
+    tx = comp * U[i][0];
+    ty = comp * U[i][1];
   }
 
   return { inradius: maxObj, translation: [tx, ty] };
