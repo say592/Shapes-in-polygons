@@ -78,10 +78,15 @@ export default function PolygonPreview({ shape, result, size = 180 }: Props) {
   const sLabelY = (aLy0 + aLy1) / 2 + outY * 9;
 
   // ── Overall bounding-box extents (width across the top, height down the right) ──
-  const bbMinX = Math.min(...polyPoints.map((p) => p[0]));
-  const bbMaxX = Math.max(...polyPoints.map((p) => p[0]));
-  const bbMinY = Math.min(...polyPoints.map((p) => p[1]));
-  const bbMaxY = Math.max(...polyPoints.map((p) => p[1]));
+  // Track the actual extreme vertices so the extension lines anchor to them.
+  const leftPt = polyPoints.reduce((best, p) => (p[0] < best[0] ? p : best), polyPoints[0]);
+  const rightPt = polyPoints.reduce((best, p) => (p[0] > best[0] ? p : best), polyPoints[0]);
+  const topPt = polyPoints.reduce((best, p) => (p[1] < best[1] ? p : best), polyPoints[0]);
+  const bottomPt = polyPoints.reduce((best, p) => (p[1] > best[1] ? p : best), polyPoints[0]);
+  const bbMinX = leftPt[0];
+  const bbMaxX = rightPt[0];
+  const bbMinY = topPt[1];
+  const bbMaxY = bottomPt[1];
   const bbGap = 12;
   const wLineY = bbMinY - bbGap; // overall-width dimension line, above the polygon
   const hLineX = bbMaxX + bbGap; // overall-height dimension line, right of the polygon
@@ -122,8 +127,8 @@ export default function PolygonPreview({ shape, result, size = 180 }: Props) {
       </text>
 
       {/* Overall width: dimension line across the top with extension ticks + label */}
-      <line x1={bbMinX} y1={bbMinY} x2={bbMinX} y2={wLineY - 3} stroke={annotColor} strokeWidth="0.8" />
-      <line x1={bbMaxX} y1={bbMinY} x2={bbMaxX} y2={wLineY - 3} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={bbMinX} y1={leftPt[1]} x2={bbMinX} y2={wLineY - 3} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={bbMaxX} y1={rightPt[1]} x2={bbMaxX} y2={wLineY - 3} stroke={annotColor} strokeWidth="0.8" />
       <line x1={bbMinX} y1={wLineY} x2={bbMaxX} y2={wLineY} stroke={annotColor} strokeWidth="0.8"
         markerStart="url(#dim-arrow)" markerEnd="url(#dim-arrow)" />
       <text x={(bbMinX + bbMaxX) / 2} y={wLineY - 5} textAnchor="middle" dominantBaseline="middle"
@@ -132,8 +137,8 @@ export default function PolygonPreview({ shape, result, size = 180 }: Props) {
       </text>
 
       {/* Overall height: dimension line down the right with extension ticks + label */}
-      <line x1={bbMaxX} y1={bbMinY} x2={hLineX + 3} y2={bbMinY} stroke={annotColor} strokeWidth="0.8" />
-      <line x1={bbMaxX} y1={bbMaxY} x2={hLineX + 3} y2={bbMaxY} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={topPt[0]} y1={bbMinY} x2={hLineX + 3} y2={bbMinY} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={bottomPt[0]} y1={bbMaxY} x2={hLineX + 3} y2={bbMaxY} stroke={annotColor} strokeWidth="0.8" />
       <line x1={hLineX} y1={bbMinY} x2={hLineX} y2={bbMaxY} stroke={annotColor} strokeWidth="0.8"
         markerStart="url(#dim-arrow)" markerEnd="url(#dim-arrow)" />
       <text x={hLineX + 4} y={(bbMinY + bbMaxY) / 2} textAnchor="middle" dominantBaseline="middle"
