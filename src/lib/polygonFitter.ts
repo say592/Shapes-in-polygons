@@ -49,25 +49,3 @@ export function computeFits(shape: Shape): FitResult[] {
   });
 }
 
-export function isValidShape(shape: Partial<Shape>): boolean {
-  if (!shape.type) return false;
-  if (shape.type === 'circle') {
-    return typeof (shape as CirclePartial).radius === 'number' && (shape as CirclePartial).radius > 0;
-  }
-  if (shape.type === 'rectangle') {
-    const r = shape as RectPartial;
-    return typeof r.width === 'number' && r.width > 0 && typeof r.height === 'number' && r.height > 0;
-  }
-  if (shape.type === 'triangle') {
-    const t = shape as TriPartial;
-    const { sideA: a, sideB: b, sideC: c } = t;
-    if (typeof a !== 'number' || typeof b !== 'number' || typeof c !== 'number') return false;
-    if (a <= 0 || b <= 0 || c <= 0) return false;
-    return a + b > c && a + c > b && b + c > a;
-  }
-  return false;
-}
-
-type CirclePartial = { type: 'circle'; radius: number };
-type RectPartial = { type: 'rectangle'; width: number; height: number };
-type TriPartial = { type: 'triangle'; sideA: number; sideB: number; sideC: number };

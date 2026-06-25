@@ -1,13 +1,10 @@
 import type { Shape, FitResult } from '../types';
+import { fmt } from '../lib/format';
 import PolygonPreview from './PolygonPreview';
 
 interface Props {
   shape: Shape;
   result: FitResult;
-}
-
-function fmt(n: number): string {
-  return n.toFixed(4);
 }
 
 export default function PolygonCard({ shape, result }: Props) {

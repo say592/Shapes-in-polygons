@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useDeferredValue } from 'react';
 import type { Shape, ShapeType, FitResult } from './types';
 import { computeFits } from './lib/polygonFitter';
 import ShapeSelector from './components/ShapeSelector';
@@ -35,6 +35,16 @@ function buildShape(type: ShapeType, vals: Record<string, string>): Shape | null
 }
 
 function getInputError(type: ShapeType, vals: Record<string, string>): string | null {
+  if (type === 'circle') {
+    const r = parseNum(vals.radius);
+    if (vals.radius && r <= 0) return 'Radius must be greater than zero.';
+  }
+  if (type === 'rectangle') {
+    const w = parseNum(vals.width);
+    const h = parseNum(vals.height);
+    if (vals.width && w <= 0) return 'Width must be greater than zero.';
+    if (vals.height && h <= 0) return 'Height must be greater than zero.';
+  }
   if (type === 'triangle') {
     const a = parseNum(vals.sideA);
     const b = parseNum(vals.sideB);
@@ -46,6 +56,19 @@ function getInputError(type: ShapeType, vals: Record<string, string>): string | 
     }
   }
   return null;
+}
+
+// Shared arrow marker — a single definition used by all PolygonPreview instances
+function SvgDefs() {
+  return (
+    <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden>
+      <defs>
+        <marker id="dim-arrow" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+          <path d="M5,0 L0,2.5 L5,5" fill="none" stroke="#475569" strokeWidth="0.8" />
+        </marker>
+      </defs>
+    </svg>
+  );
 }
 
 export default function App() {
@@ -66,13 +89,16 @@ export default function App() {
   const shape = useMemo(() => buildShape(shapeType, values), [shapeType, values]);
   const error = useMemo(() => getInputError(shapeType, values), [shapeType, values]);
 
+  // Defer the expensive LP computation so keystrokes stay responsive
+  const deferredShape = useDeferredValue(shape);
   const results = useMemo<FitResult[] | null>(() => {
-    if (!shape) return null;
-    return computeFits(shape);
-  }, [shape]);
+    if (!deferredShape) return null;
+    return computeFits(deferredShape);
+  }, [deferredShape]);
 
   return (
     <div className="app">
+      <SvgDefs />
       <header className="app-header">
         <h1 className="app-title">Shape Polygon Fitter</h1>
         <p className="app-subtitle">
@@ -95,14 +121,10 @@ export default function App() {
               <label className="field-label">Shape summary</label>
               {shape.type === 'circle' && <p>Circle with radius {shape.radius}</p>}
               {shape.type === 'rectangle' && (
-                <p>
-                  {shape.width} × {shape.height} rectangle
-                </p>
+                <p>{shape.width} × {shape.height} rectangle</p>
               )}
               {shape.type === 'triangle' && (
-                <p>
-                  Triangle with sides {shape.sideA}, {shape.sideB}, {shape.sideC}
-                </p>
+                <p>Triangle with sides {shape.sideA}, {shape.sideB}, {shape.sideC}</p>
               )}
             </div>
           )}
