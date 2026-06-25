@@ -26,6 +26,10 @@ export interface FitResult {
   inradius: number;
   circumradius: number;
   sideLength: number;
+  /** Overall bounding-box width of the polygon at its computed orientation. */
+  boundingWidth: number;
+  /** Overall bounding-box height of the polygon at its computed orientation. */
+  boundingHeight: number;
   alpha: number;
   translation: [number, number];
 }

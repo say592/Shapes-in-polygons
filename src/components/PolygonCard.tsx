@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function PolygonCard({ shape, result }: Props) {
-  const { polygonName, sides, inradius, circumradius, sideLength } = result;
+  const { polygonName, sides, inradius, circumradius, sideLength, boundingWidth, boundingHeight } = result;
 
   return (
     <div className="polygon-card">
@@ -25,6 +25,14 @@ export default function PolygonCard({ shape, result }: Props) {
         <div className="stat">
           <span className="stat-label">Side length</span>
           <span className="stat-value">{fmt(sideLength)}</span>
+        </div>
+        <div className="stat">
+          <span className="stat-label">Overall width</span>
+          <span className="stat-value">{fmt(boundingWidth)}</span>
+        </div>
+        <div className="stat">
+          <span className="stat-label">Overall height</span>
+          <span className="stat-value">{fmt(boundingHeight)}</span>
         </div>
         <div className="stat">
           <span className="stat-label">Inradius</span>

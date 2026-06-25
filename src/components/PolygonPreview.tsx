@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function PolygonPreview({ shape, result, size = 180 }: Props) {
-  const { sides: n, inradius, circumradius, sideLength, alpha, translation } = result;
+  const { sides: n, inradius, circumradius, sideLength, boundingWidth, boundingHeight, alpha, translation } = result;
   const [tx, ty] = translation;
 
   // Extra padding to leave room for dimension annotations outside the polygon
@@ -77,6 +77,15 @@ export default function PolygonPreview({ shape, result, size = 180 }: Props) {
   const sLabelX = (aLx0 + aLx1) / 2 + outX * 9;
   const sLabelY = (aLy0 + aLy1) / 2 + outY * 9;
 
+  // ── Overall bounding-box extents (width across the top, height down the right) ──
+  const bbMinX = Math.min(...polyPoints.map((p) => p[0]));
+  const bbMaxX = Math.max(...polyPoints.map((p) => p[0]));
+  const bbMinY = Math.min(...polyPoints.map((p) => p[1]));
+  const bbMaxY = Math.max(...polyPoints.map((p) => p[1]));
+  const bbGap = 12;
+  const wLineY = bbMinY - bbGap; // overall-width dimension line, above the polygon
+  const hLineX = bbMaxX + bbGap; // overall-height dimension line, right of the polygon
+
   const annotColor = '#475569';
   const annotTextColor = '#94a3b8';
   const shapeProps = { fill: 'rgba(99,102,241,0.25)', stroke: '#6366f1', strokeWidth: '1.5' };
@@ -110,6 +119,27 @@ export default function PolygonPreview({ shape, result, size = 180 }: Props) {
       <text x={rLabelX} y={rLabelY} textAnchor="middle" dominantBaseline="middle"
         fontSize={9} fill={annotTextColor} fontFamily="monospace">
         r={fmt(inradius)}
+      </text>
+
+      {/* Overall width: dimension line across the top with extension ticks + label */}
+      <line x1={bbMinX} y1={bbMinY} x2={bbMinX} y2={wLineY - 3} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={bbMaxX} y1={bbMinY} x2={bbMaxX} y2={wLineY - 3} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={bbMinX} y1={wLineY} x2={bbMaxX} y2={wLineY} stroke={annotColor} strokeWidth="0.8"
+        markerStart="url(#dim-arrow)" markerEnd="url(#dim-arrow)" />
+      <text x={(bbMinX + bbMaxX) / 2} y={wLineY - 5} textAnchor="middle" dominantBaseline="middle"
+        fontSize={9} fill={annotTextColor} fontFamily="monospace">
+        w={fmt(boundingWidth)}
+      </text>
+
+      {/* Overall height: dimension line down the right with extension ticks + label */}
+      <line x1={bbMaxX} y1={bbMinY} x2={hLineX + 3} y2={bbMinY} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={bbMaxX} y1={bbMaxY} x2={hLineX + 3} y2={bbMaxY} stroke={annotColor} strokeWidth="0.8" />
+      <line x1={hLineX} y1={bbMinY} x2={hLineX} y2={bbMaxY} stroke={annotColor} strokeWidth="0.8"
+        markerStart="url(#dim-arrow)" markerEnd="url(#dim-arrow)" />
+      <text x={hLineX + 4} y={(bbMinY + bbMaxY) / 2} textAnchor="middle" dominantBaseline="middle"
+        fontSize={9} fill={annotTextColor} fontFamily="monospace"
+        transform={`rotate(90 ${hLineX + 4} ${(bbMinY + bbMaxY) / 2})`}>
+        h={fmt(boundingHeight)}
       </text>
 
       {/* Side length: extension lines + annotation line + label */}
